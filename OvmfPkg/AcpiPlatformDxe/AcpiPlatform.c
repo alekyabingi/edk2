@@ -11,7 +11,7 @@
 #include <ConfidentialComputingGuestAttr.h>
 
 #include <Library/AcpiPlatformLib.h>
-
+#include <Library/DebugLib.h>
 #include "AcpiPlatform.h"
 
 /**
