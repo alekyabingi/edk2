@@ -13,7 +13,6 @@
 #include <Library/AcpiPlatformLib.h>
 
 #include "AcpiPlatform.h"
-#include <DebugLib.h>
 
 /**
   Effective entrypoint of Acpi Platform driver.
