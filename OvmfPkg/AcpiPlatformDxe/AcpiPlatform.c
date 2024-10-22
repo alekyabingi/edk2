@@ -13,6 +13,7 @@
 #include <Library/AcpiPlatformLib.h>
 
 #include "AcpiPlatform.h"
+#include <DebugLib.h>
 
 /**
   Effective entrypoint of Acpi Platform driver.
@@ -35,13 +36,19 @@ InstallAcpiTables (
   UINT16      HostBridgeDevId;
 
   HostBridgeDevId = PcdGet16 (PcdOvmfHostBridgePciDevId);
+  DEBUG ((DEBUG_INFO, "InstallAcpiTables[TEST]: Entering the block\n"));
+
+  DEBUG ((DEBUG_INFO, "InstallAcpiTables[TEST]: HostBridgeDevId: %d\n", HostBridgeDevId));
   if (HostBridgeDevId == CLOUDHV_DEVICE_ID) {
     if (CC_GUEST_IS_TDX (PcdGet64 (PcdConfidentialComputingGuestAttr))) {
+      DEBUG ((DEBUG_INFO, "InstallAcpiTables[TEST]: Installing CloudHV TDX tables\n"));
       Status = InstallCloudHvTablesTdx (AcpiTable);
     } else {
+      DEBUG ((DEBUG_INFO, "InstallAcpiTables[TEST]: Installing CloudHV tables\n"));
       Status = InstallCloudHvTables (AcpiTable);
     }
   } else {
+    DEBUG ((DEBUG_INFO, "InstallAcpiTables[TEST]: Installing QEMU FW CFG tables\n"));
     Status = InstallQemuFwCfgTables (AcpiTable);
   }
 

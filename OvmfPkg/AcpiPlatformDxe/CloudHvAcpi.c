@@ -141,6 +141,7 @@ InstallCloudHvTables (
 
   PVHResetVectorData = (VOID *)(UINTN)PcdGet32 (PcdXenPvhStartOfDayStructPtr);
   if (PVHResetVectorData == 0) {
+    DEBUG ((DEBUG_INFO, "InstallCloudHvTables[TEST]: PVHResetVectorData is NULL\n"));
     return EFI_NOT_FOUND;
   }
 
@@ -150,7 +151,10 @@ InstallCloudHvTables (
   // If XSDT table is found, just install its tables.
   // Otherwise, try to find and install the RSDT tables.
   //
+  
   if (AcpiRsdpStructurePtr->XsdtAddress) {
+
+    DEBUG ((DEBUG_INFO, "InstallCloudHvTables[TEST]: XSDT table is found\n"));
     //
     // Retrieve the addresses of XSDT and
     // calculate the number of its table entries.
@@ -164,6 +168,7 @@ InstallCloudHvTables (
     //
     // Install ACPI tables found in XSDT.
     //
+    DEBUG ((DEBUG_INFO, "InstallCloudHvTables[TEST]: No of tables in XSDT: %d\n", NumberOfTableEntries));
     for (Index = 0; Index < NumberOfTableEntries; Index++) {
       //
       // Get the table entry from XSDT
@@ -185,6 +190,7 @@ InstallCloudHvTables (
                                );
 
       if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_INFO, "InstallCloudHvTables[TEST]: Error in installing XSDT table at index %d\n", Index));
         ASSERT_EFI_ERROR (Status);
         return Status;
       }
@@ -193,12 +199,16 @@ InstallCloudHvTables (
       // Get the X-DSDT table address from the table FADT
       //
       if (!AsciiStrnCmp ((CHAR8 *)&CurrentTable->Signature, "FACP", 4)) {
+        DEBUG ((DEBUG_INFO, "InstallCloudHvTables[TEST]: Getting X-DSDT from FADT\n"));
         Fadt2Table = (EFI_ACPI_2_0_FIXED_ACPI_DESCRIPTION_TABLE *)
                      (UINTN)CurrentTablePointer;
         DsdtTable = (EFI_ACPI_DESCRIPTION_HEADER *)(UINTN)Fadt2Table->XDsdt;
+
+        DEBUG ((DEBUG_INFO, "InstallCloudHvTables[TEST]: Finished Getting X-DSDT from FADT\n"));
       }
     }
   } else {
+    DEBUG ((DEBUG_INFO, "InstallCloudHvTables[TEST]: XSDT table not found. Exiting\n"));
     return EFI_NOT_FOUND;
   }
 
@@ -219,6 +229,7 @@ InstallCloudHvTables (
                            &TableHandle
                            );
   if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_INFO, "InstallCloudHvTables[TEST]: Error while installing DsdtTable. \n"));
     ASSERT_EFI_ERROR (Status);
     return Status;
   }
