@@ -34,8 +34,8 @@ InstallAcpiTables (
   EFI_STATUS  Status;
   UINT16      HostBridgeDevId;
 
+  DEBUG ((DEBUG_INFO, "InstallAcpiTables[TEST]: Entering the block. Trying to execute PcdGet16\n"));
   HostBridgeDevId = PcdGet16 (PcdOvmfHostBridgePciDevId);
-  DEBUG ((DEBUG_INFO, "InstallAcpiTables[TEST]: Entering the block\n"));
 
   DEBUG ((DEBUG_INFO, "InstallAcpiTables[TEST]: HostBridgeDevId: %d\n", HostBridgeDevId));
   if (HostBridgeDevId == CLOUDHV_DEVICE_ID) {

@@ -1118,8 +1118,12 @@ InstallQemuFwCfgTables (
   ORDERED_COLLECTION_ENTRY  *SeenPointerEntry, *SeenPointerEntry2;
   EFI_HANDLE                QemuAcpiHandle;
 
+  DEBUG ((DEBUG_INFO, "QemuFwCfgAcpi[TEST]: Entering InstallQemuFwCfgTables\n"));
   Status = QemuFwCfgFindFile ("etc/table-loader", &FwCfgItem, &FwCfgSize);
+  
+  DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Completed executing QemuFwCfgFindFile with etc/table-loader. \n"));
   if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Error status returned from QemuFwCfgFindFile. \n"));
     return Status;
   }
 
@@ -1133,16 +1137,24 @@ InstallQemuFwCfgTables (
     return EFI_PROTOCOL_ERROR;
   }
 
+  DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Before invoking AllocatePool. \n"));
   LoaderStart = AllocatePool (FwCfgSize);
+  DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: After invoking AllocatePool. \n"));
   if (LoaderStart == NULL) {
+    DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: LoaderStart is NULL. Hence returning EFI_OUT_OF_RESOURCES \n"));
     return EFI_OUT_OF_RESOURCES;
   }
 
+  DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Before invoking EnablePciDecoding. \n"));
   EnablePciDecoding (&OriginalPciAttributes, &OriginalPciAttributesCount);
+  DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Before invoking QemuFwCfgSelectItem. \n"));
   QemuFwCfgSelectItem (FwCfgItem);
+  DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Before invoking QemuFwCfgReadBytes. \n"));
   QemuFwCfgReadBytes (FwCfgSize, LoaderStart);
+  DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Before invoking RestorePciDecoding. \n"));
   RestorePciDecoding (OriginalPciAttributes, OriginalPciAttributesCount);
 
+  DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Before invoking TpmMeasureAndLogData. \n"));
   //
   // Measure the "etc/table-loader" which is downloaded from QEMU.
   // It has to be done before it is consumed. Because it would be
@@ -1171,16 +1183,20 @@ InstallQemuFwCfgTables (
 
   S3Context = NULL;
   if (QemuFwCfgS3Enabled ()) {
+    DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Entering QemuFwCfgS3Enabled block. \n"));
     //
     // Size the allocation pessimistically, assuming that all commands in the
     // script are QEMU_LOADER_WRITE_POINTER commands.
     //
     Status = AllocateS3Context (&S3Context, LoaderEnd - LoaderStart);
+    DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Completed AllocateS3Context request. \n"));
     if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Error status returned with AllocateS3Context request. \n"));
       goto FreeAllocationsRestrictedTo32Bit;
     }
   }
 
+  DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Before invoking OrderedCollectionInit. \n"));
   Tracker = OrderedCollectionInit (BlobCompare, BlobKeyCompare);
   if (Tracker == NULL) {
     Status = EFI_OUT_OF_RESOURCES;
@@ -1198,6 +1214,7 @@ InstallQemuFwCfgTables (
   for (LoaderEntry = LoaderStart; LoaderEntry < LoaderEnd; ++LoaderEntry) {
     switch (LoaderEntry->Type) {
       case QemuLoaderCmdAllocate:
+        DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Entered QemuLoaderCmdAllocate switch case. \n"));
         Status = ProcessCmdAllocate (
                    &LoaderEntry->Command.Allocate,
                    Tracker,
@@ -1206,6 +1223,7 @@ InstallQemuFwCfgTables (
         break;
 
       case QemuLoaderCmdAddPointer:
+        DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Entered QemuLoaderCmdAddPointer switch case. \n"));
         Status = ProcessCmdAddPointer (
                    &LoaderEntry->Command.AddPointer,
                    Tracker
@@ -1213,6 +1231,7 @@ InstallQemuFwCfgTables (
         break;
 
       case QemuLoaderCmdAddChecksum:
+        DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Entered QemuLoaderCmdAddChecksum switch case. \n"));
         Status = ProcessCmdAddChecksum (
                    &LoaderEntry->Command.AddChecksum,
                    Tracker
@@ -1220,6 +1239,7 @@ InstallQemuFwCfgTables (
         break;
 
       case QemuLoaderCmdWritePointer:
+        DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Entered QemuLoaderCmdWritePointer switch case. \n"));
         Status = ProcessCmdWritePointer (
                    &LoaderEntry->Command.WritePointer,
                    Tracker,
@@ -1240,20 +1260,25 @@ InstallQemuFwCfgTables (
           ));
         break;
     }
-
+    DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Completed executing LoaderEntry->Type switch case. \n"));
     if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Error status detected after executing the LoaderEntry->Type switch case. \n"));
       goto RollbackWritePointersAndFreeTracker;
     }
   }
 
+  DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Before executing AllocatePool with InstalledKey. \n"));
   InstalledKey = AllocatePool (INSTALLED_TABLES_MAX * sizeof *InstalledKey);
   if (InstalledKey == NULL) {
+    DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Error status with InstalledKey AllocatePool. returning EFI_OUT_OF_RESOURCES  \n"));
     Status = EFI_OUT_OF_RESOURCES;
     goto RollbackWritePointersAndFreeTracker;
   }
 
+  DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Before invoking  OrderedCollectionInit... \n"));
   SeenPointers = OrderedCollectionInit (PointerCompare, PointerCompare);
   if (SeenPointers == NULL) {
+    DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Null SeenPointers returned. Setting status to EFI_OUT_OF_RESOURCES \n"));
     Status = EFI_OUT_OF_RESOURCES;
     goto FreeKeys;
   }
@@ -1264,6 +1289,7 @@ InstallQemuFwCfgTables (
   Installed = 0;
   for (LoaderEntry = LoaderStart; LoaderEntry < LoaderEnd; ++LoaderEntry) {
     if (LoaderEntry->Type == QemuLoaderCmdAddPointer) {
+      DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Second pass to identify and install ACPI tables. LoderEntry->Type is QemuLoaderCmdAddPointer \n"));
       Status = Process2ndPassCmdAddPointer (
                  &LoaderEntry->Command.AddPointer,
                  Tracker,
@@ -1272,7 +1298,9 @@ InstallQemuFwCfgTables (
                  &Installed,
                  SeenPointers
                  );
+      DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Completed executing Process2ndPassCmdAddPointer\n"));
       if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Error status returned with Process2ndPassCmdAddPointer. Uninstalling Acpi Tables\n"));
         goto UninstallAcpiTables;
       }
     }
@@ -1282,6 +1310,7 @@ InstallQemuFwCfgTables (
   // Install a protocol to notify that the ACPI table provided by Qemu is
   // ready.
   //
+  DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Install a protocol to notify that the ACPI table provided by Qemu is ready\n"));
   QemuAcpiHandle = NULL;
   Status         = gBS->InstallProtocolInterface (
                           &QemuAcpiHandle,
@@ -1290,6 +1319,7 @@ InstallQemuFwCfgTables (
                           NULL
                           );
   if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: InstallProtocolInterface returned an error status\n"));
     goto UninstallAcpiTables;
   }
 
@@ -1299,8 +1329,11 @@ InstallQemuFwCfgTables (
   // if it succeeds, it cannot be undone.
   //
   if (S3Context != NULL) {
+    DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Invoking TransferS3ContextToBootScript\n"));
     Status = TransferS3ContextToBootScript (S3Context);
+    DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Completed TransferS3ContextToBootScript\n"));
     if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_INFO, "InstallQemuFwCfgTables[TEST]: Error status detected with TransferS3ContextToBootScript\n"));
       goto UninstallQemuAcpiTableNotifyProtocol;
     }
 
