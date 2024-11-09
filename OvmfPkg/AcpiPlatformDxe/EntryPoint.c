@@ -24,12 +24,14 @@ FindAcpiTableProtocol (
   EFI_STATUS               Status;
   EFI_ACPI_TABLE_PROTOCOL  *AcpiTable;
 
+  DEBUG ((DEBUG_INFO, "[TEST] Entering FindAcpiTableProtocol....."));
   Status = gBS->LocateProtocol (
                   &gEfiAcpiTableProtocolGuid,
                   NULL,
                   (VOID **)&AcpiTable
                   );
   ASSERT_EFI_ERROR (Status);
+  DEBUG ((DEBUG_INFO, "[TEST] Exiting FindAcpiTableProtocol....."));
   return AcpiTable;
 }
 
@@ -49,6 +51,7 @@ OnRootBridgesConnected (
     __func__
     ));
   Status = InstallAcpiTables (FindAcpiTableProtocol ());
+  DEBUG ((DEBUG_INFO, "OnRootBridgesConnected:[TEST] Completed executing InstallAcpiTables..."))
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a: InstallAcpiTables: %r\n", __func__, Status));
   }
